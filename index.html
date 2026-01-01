@@ -91,6 +91,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            transition: opacity 0.8s ease;
         }
 
         .lang-card {
@@ -110,6 +111,11 @@
             font-size: 1.4rem;
             width: 100%;
             margin: 5px 0;
+            transition: background 0.3s;
+        }
+
+        .lang-btn:hover {
+            background: #f0f4f0;
         }
 
         .top-branding {
@@ -145,7 +151,7 @@
         </div>
     </div>
 
-    <main id="mainApp" class="opacity-0 transition-opacity duration-1000">
+    <main id="mainApp" class="opacity-0 transition-opacity duration-1000 hidden">
         <header class="top-branding">FrametheChnage</header>
 
         <section class="pt-6 pb-12 px-6 text-center">
@@ -159,8 +165,8 @@
         <section class="py-12 px-6 max-w-4xl mx-auto">
             <div class="mb-6 flex justify-between items-end">
                 <p id="dateStamp" class="text-emerald-700/40 text-lg font-bold">LOADING...</p>
-                <button onclick="saveNote()" class="p-4 glass-btn rounded-2xl flex items-center gap-2">
-                    <i class="fa-solid fa-seedling text-emerald-600"></i> Preserve
+                <button id="saveBtn" onclick="saveNote()" class="p-4 glass-btn rounded-2xl flex items-center gap-2">
+                    <i class="fa-solid fa-seedling text-emerald-600"></i> <span id="saveBtnText">Preserve</span>
                 </button>
             </div>
 
@@ -192,7 +198,9 @@
             document.getElementById('langGrid').classList.add('hidden');
             document.getElementById('gateLoader').classList.remove('hidden');
 
-            if (lang !== "English") {
+            // Start translation process in parallel, but don't block the UI transition entirely
+            const translatePromise = (async () => {
+                if (lang === "English") return null;
                 try {
                     const ui = {
                         quote: "Leave a note bearing soemthing you wish someone had told you. Or simply just be present till you feel better",
@@ -210,22 +218,40 @@
                         })
                     });
                     const data = await response.json();
-                    const trans = JSON.parse(data.candidates[0].content.parts[0].text);
-                    
-                    document.getElementById('quoteBox').innerText = `"${trans.quote}"`;
-                    document.getElementById('heroSubtitle').innerText = trans.subtitle;
-                    document.getElementById('noteInput').placeholder = trans.placeholder;
-                } catch (e) { console.error(e); }
+                    return JSON.parse(data.candidates[0].content.parts[0].text);
+                } catch (e) { 
+                    console.error("Translation failed", e);
+                    return null; 
+                }
+            })();
+
+            // Transition UI
+            const trans = await translatePromise;
+            if (trans) {
+                document.getElementById('quoteBox').innerText = `"${trans.quote}"`;
+                document.getElementById('heroSubtitle').innerText = trans.subtitle;
+                document.getElementById('noteInput').placeholder = trans.placeholder;
+                document.getElementById('saveBtnText').innerText = trans.preserve;
             }
 
-            document.getElementById('languageGate').classList.add('hidden');
-            document.getElementById('mainApp').classList.remove('opacity-0');
-            startEnv();
+            document.getElementById('languageGate').style.opacity = '0';
+            setTimeout(() => {
+                document.getElementById('languageGate').classList.add('hidden');
+                const main = document.getElementById('mainApp');
+                main.classList.remove('hidden');
+                setTimeout(() => main.classList.remove('opacity-0'), 50);
+                startEnv();
+            }, 800);
         };
 
         window.saveNote = async () => {
             const text = document.getElementById('noteInput').value.trim();
             if (!text || !user) return;
+            
+            const btn = document.getElementById('saveBtn');
+            btn.disabled = true;
+            btn.style.opacity = "0.5";
+
             try {
                 await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'notes'), {
                     text,
@@ -234,7 +260,12 @@
                     ts: serverTimestamp()
                 });
                 document.getElementById('noteInput').value = "";
-            } catch (e) { console.error(e); }
+            } catch (e) { 
+                console.error("Save failed", e); 
+            } finally {
+                btn.disabled = false;
+                btn.style.opacity = "1";
+            }
         };
 
         function startEnv() {
@@ -252,12 +283,10 @@
         onAuthStateChanged(auth, (u) => {
             user = u;
             if (user) {
-                // The shared screen logic: Listening for any changes in the shared 'notes' collection
                 const notesCollection = collection(db, 'artifacts', appId, 'public', 'data', 'notes');
                 onSnapshot(notesCollection, (snap) => {
                     const list = [];
                     snap.forEach(d => list.push(d.data()));
-                    // Sort locally to keep the newest notes at the top across all screens
                     list.sort((a,b) => (b.ts?.seconds || 0) - (a.ts?.seconds || 0));
                     document.getElementById('notesFeed').innerHTML = list.map(n => `
                         <div class="glass-notepad p-10 shadow-sm" style="transform: rotate(${n.rot}deg)">
@@ -270,14 +299,18 @@
             }
         });
 
-        const init = async () => {
-            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                await signInWithCustomToken(auth, __initial_auth_token);
-            } else {
-                await signInAnonymously(auth);
+        const initAuth = async () => {
+            try {
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+            } catch (e) {
+                console.error("Auth init failed", e);
             }
         };
-        init();
+        initAuth();
     </script>
 </body>
 </html>
