@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FrametheChnage</title>
+    <title>FrametheChnage | Personal Sanctuary</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
@@ -66,6 +66,7 @@
             backdrop-filter: blur(15px);
             border: 1px solid rgba(255, 255, 255, 0.6);
             border-radius: 3rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.02);
         }
 
         .note-paper {
@@ -83,6 +84,11 @@
             cursor: pointer;
         }
 
+        .glass-btn:hover {
+            background: rgba(255, 255, 255, 0.9);
+            transform: translateY(-2px);
+        }
+
         .language-gate {
             position: fixed;
             inset: 0;
@@ -91,7 +97,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: opacity 0.5s ease;
+            transition: opacity 0.8s ease;
         }
 
         .lang-card {
@@ -113,7 +119,12 @@
             width: 100%;
             margin: 5px 0;
             cursor: pointer;
-            display: block;
+            transition: all 0.3s;
+        }
+
+        .lang-btn:hover {
+            background: #f0f4f0;
+            border-color: var(--leaf-bright);
         }
 
         .top-branding {
@@ -128,7 +139,16 @@
         #mainApp {
             display: none;
             opacity: 0;
-            transition: opacity 1s ease;
+            transition: opacity 1.2s ease;
+        }
+
+        .fade-in {
+            animation: fadeIn 1s forwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
     </style>
 </head>
@@ -160,7 +180,7 @@
 
         <section class="pt-6 pb-12 px-6 text-center">
             <div id="quoteBox" class="p-6 max-w-2xl mx-auto italic mb-8 text-3xl md:text-5xl text-emerald-950 leading-relaxed">
-                "Leave a note bearing soemthing you wish someone had told you. Or simply just be present till you feel better"
+                "Leave a note bearing something you wish someone had told you. Or simply just be present till you feel better"
             </div>
             <h1 id="heroTitle" class="text-6xl md:text-8xl text-emerald-900 mb-4">rOOTed tOgEThER</h1>
             <p id="heroSubtitle" class="text-2xl text-emerald-800/60">here for all.</p>
@@ -169,68 +189,53 @@
         <section class="py-12 px-6 max-w-4xl mx-auto">
             <div class="mb-6 flex justify-between items-end">
                 <p id="dateStamp" class="text-emerald-700/40 text-lg font-bold">LOADING...</p>
-                <button id="saveBtn" onclick="saveNote()" class="p-4 glass-btn rounded-2xl flex items-center gap-2">
+                <button id="saveBtn" onclick="savePersonalNote()" class="p-4 glass-btn rounded-2xl flex items-center gap-2">
                     <i class="fa-solid fa-seedling text-emerald-600"></i> <span id="saveBtnText">Preserve</span>
                 </button>
             </div>
 
             <div class="glass-notepad">
-                <div class="note-paper p-8 md:p-12 min-h-[350px]">
-                    <textarea id="noteInput" class="w-full bg-transparent border-none focus:ring-0 text-3xl text-emerald-950 placeholder:text-emerald-900/10 resize-none h-64 outline-none" placeholder="Let your thoughts settle on the page..."></textarea>
+                <div class="note-paper p-8 md:p-12 min-h-[400px]">
+                    <textarea id="noteInput" class="w-full bg-transparent border-none focus:ring-0 text-3xl text-emerald-950 placeholder:text-emerald-900/10 resize-none h-80 outline-none" placeholder="Let your thoughts settle on the page..."></textarea>
                 </div>
             </div>
         </section>
 
-        <section id="notesFeed" class="py-20 px-6 max-w-6xl mx-auto grid md:grid-cols-2 gap-10"></section>
+        <section id="personalFeed" class="py-20 px-6 max-w-6xl mx-auto grid md:grid-cols-2 gap-10"></section>
     </main>
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+    <script>
+        const apiKey = ""; // Gemini API key fallback
 
-        const firebaseConfig = JSON.parse(__firebase_config);
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'rooted-shared-live';
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
-        const apiKey = "";
-
-        let user = null;
-
-        // Using a unique name to avoid any potential reserved word collisions
+        // Language Selection and Translation Logic
         window.handleLangSelection = (lang) => {
             const gate = document.getElementById('languageGate');
             const main = document.getElementById('mainApp');
             const grid = document.getElementById('langGrid');
             const loader = document.getElementById('gateLoader');
             
-            // 1. Immediately show loader
             grid.classList.add('hidden');
             loader.classList.remove('hidden');
 
-            // 2. Trigger non-blocking translation
             if (lang !== "English") {
-                translateUIContent(lang);
+                translateUI(lang);
             }
 
-            // 3. Immediately trigger transition to main app
+            // Visual Transition
             gate.style.opacity = '0';
             setTimeout(() => {
                 gate.style.display = 'none';
                 main.style.display = 'block';
-                // Trigger reflow
-                main.offsetHeight; 
+                main.offsetHeight; // trigger reflow
                 main.style.opacity = '1';
-                startEnvironment();
-                setupFirestoreSync();
-            }, 400);
+                initSanctuary();
+            }, 800);
         };
 
-        async function translateUIContent(lang) {
+        async function translateUI(lang) {
             try {
                 const ui = {
-                    quote: "Leave a note bearing soemthing you wish someone had told you. Or simply just be present till you feel better",
+                    quote: "Leave a note bearing something you wish someone had told you. Or simply just be present till you feel better",
                     subtitle: "here for all.",
                     placeholder: "Let your thoughts settle on the page...",
                     preserve: "Preserve"
@@ -248,97 +253,85 @@
                 if (response.ok) {
                     const data = await response.json();
                     const trans = JSON.parse(data.candidates[0].content.parts[0].text);
-                    const quoteBox = document.getElementById('quoteBox');
-                    const heroSubtitle = document.getElementById('heroSubtitle');
-                    const noteInput = document.getElementById('noteInput');
-                    const saveBtnText = document.getElementById('saveBtnText');
-                    
-                    if(quoteBox) quoteBox.innerText = `"${trans.quote}"`;
-                    if(heroSubtitle) heroSubtitle.innerText = trans.subtitle;
-                    if(noteInput) noteInput.placeholder = trans.placeholder;
-                    if(saveBtnText) saveBtnText.innerText = trans.preserve;
+                    document.getElementById('quoteBox').innerText = `"${trans.quote}"`;
+                    document.getElementById('heroSubtitle').innerText = trans.subtitle;
+                    document.getElementById('noteInput').placeholder = trans.placeholder;
+                    document.getElementById('saveBtnText').innerText = trans.preserve;
                 }
             } catch (e) { 
-                console.warn("Translation silently skipped", e); 
+                console.warn("Translation skipped, using default English."); 
             }
         }
 
-        window.saveNote = async () => {
+        // Core App Logic
+        function initSanctuary() {
+            updateDate();
+            renderPersonalNotes();
+            startLeafStorm();
+        }
+
+        function updateDate() {
+            document.getElementById('dateStamp').innerText = new Date().toLocaleDateString(undefined, { 
+                month: 'long', 
+                day: 'numeric',
+                year: 'numeric'
+            }).toUpperCase();
+        }
+
+        window.savePersonalNote = () => {
             const input = document.getElementById('noteInput');
             const text = input.value.trim();
-            if (!text || !user) return;
-            
-            try {
-                await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'notes'), {
-                    text,
-                    uid: user.uid,
-                    rot: (Math.random() * 4 - 2).toFixed(2),
-                    ts: serverTimestamp()
-                });
-                input.value = "";
-            } catch (e) { 
-                console.error("Save failed", e); 
-            }
+            if (!text) return;
+
+            const notes = JSON.parse(localStorage.getItem('sanctuary_notes') || '[]');
+            notes.unshift({
+                text,
+                date: new Date().toISOString(),
+                id: Date.now(),
+                rotation: (Math.random() * 4 - 2).toFixed(2)
+            });
+
+            localStorage.setItem('sanctuary_notes', JSON.stringify(notes));
+            input.value = "";
+            renderPersonalNotes();
         };
 
-        function startEnvironment() {
-            const dateEl = document.getElementById('dateStamp');
-            if(dateEl) {
-                dateEl.innerText = new Date().toLocaleDateString(undefined, { month: 'long', day: 'numeric' }).toUpperCase();
-            }
+        function renderPersonalNotes() {
+            const notes = JSON.parse(localStorage.getItem('sanctuary_notes') || '[]');
+            const feed = document.getElementById('personalFeed');
             
-            if (!window.leafInterval) {
-                window.leafInterval = setInterval(() => {
-                    const container = document.getElementById('leaf-container');
-                    if(!container) return;
-                    const leaf = document.createElement('i');
-                    leaf.className = 'fa-solid fa-leaf leaf-particle';
-                    leaf.style.left = Math.random() * 100 + 'vw';
-                    leaf.style.animationDuration = (Math.random() * 8 + 8) + 's';
-                    container.appendChild(leaf);
-                    setTimeout(() => leaf.remove(), 16000);
-                }, 4000);
-            }
+            feed.innerHTML = notes.map(n => `
+                <div class="glass-notepad p-10 fade-in shadow-sm relative group" style="transform: rotate(${n.rotation}deg)">
+                    <button onclick="deleteNote(${n.id})" class="absolute top-4 right-4 opacity-0 group-hover:opacity-40 transition-opacity hover:!opacity-100 text-emerald-900">
+                        <i class="fa-solid fa-trash-can"></i>
+                    </button>
+                    <div class="text-3xl text-emerald-950 whitespace-pre-wrap leading-relaxed">${n.text}</div>
+                    <div class="mt-6 text-sm text-emerald-800/30 font-bold tracking-widest">
+                        ${new Date(n.date).toLocaleDateString()}
+                    </div>
+                </div>
+            `).join('');
         }
 
-        function setupFirestoreSync() {
-            if (!user) return;
-            const notesCollection = collection(db, 'artifacts', appId, 'public', 'data', 'notes');
-            onSnapshot(notesCollection, (snap) => {
-                const list = [];
-                snap.forEach(d => list.push(d.data()));
-                list.sort((a,b) => (b.ts?.seconds || 0) - (a.ts?.seconds || 0));
-                const feed = document.getElementById('notesFeed');
-                if(feed) {
-                    feed.innerHTML = list.map(n => `
-                        <div class="glass-notepad p-10 shadow-sm" style="transform: rotate(${n.rot}deg)">
-                            <div class="text-3xl text-emerald-950 whitespace-pre-wrap">${n.text}</div>
-                        </div>
-                    `).join('');
-                }
-            }, (err) => console.error(err));
-        }
-
-        onAuthStateChanged(auth, (u) => {
-            user = u;
-            // Re-sync if they are already in the main app
-            if(user && document.getElementById('mainApp').style.display === 'block') {
-                setupFirestoreSync();
-            }
-        });
-
-        const initAuth = async () => {
-            try {
-                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                    await signInWithCustomToken(auth, __initial_auth_token);
-                } else {
-                    await signInAnonymously(auth);
-                }
-            } catch (e) {
-                console.error("Auth init failed", e);
-            }
+        window.deleteNote = (id) => {
+            let notes = JSON.parse(localStorage.getItem('sanctuary_notes') || '[]');
+            notes = notes.filter(n => n.id !== id);
+            localStorage.setItem('sanctuary_notes', JSON.stringify(notes));
+            renderPersonalNotes();
         };
-        initAuth();
+
+        function startLeafStorm() {
+            const container = document.getElementById('leaf-container');
+            setInterval(() => {
+                const leaf = document.createElement('i');
+                leaf.className = 'fa-solid fa-leaf leaf-particle';
+                leaf.style.left = Math.random() * 100 + 'vw';
+                leaf.style.fontSize = (Math.random() * 1 + 1) + 'rem';
+                leaf.style.animationDuration = (Math.random() * 8 + 8) + 's';
+                container.appendChild(leaf);
+                setTimeout(() => leaf.remove(), 16000);
+            }, 3500);
+        }
     </script>
 </body>
 </html>
