@@ -14,20 +14,24 @@
             --sunlight: #fdfbf0;
             --moss-light: #a3b18a;
             --leaf-bright: #588157;
-            --glass-shine: rgba(255, 255, 255, 0.45);
         }
 
-        body, html, button, textarea, input { 
+        body, html { 
             font-family: 'Caveat', cursive; 
             background-color: #f4f7f2;
-            background-image: 
-                radial-gradient(circle at 10% 20%, rgba(88, 129, 87, 0.15) 0%, transparent 40%),
-                radial-gradient(circle at 90% 80%, rgba(163, 177, 138, 0.2) 0%, transparent 40%),
-                url("https://www.transparenttextures.com/patterns/asfalt-light.png");
-            background-attachment: fixed;
             color: #1b261b;
             margin: 0;
             overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        .bg-textured {
+            position: fixed;
+            inset: 0;
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(88, 129, 87, 0.1) 0%, transparent 40%),
+                url("https://www.transparenttextures.com/patterns/asfalt-light.png");
+            z-index: -1;
         }
 
         .sun-ray {
@@ -41,12 +45,6 @@
             pointer-events: none;
             z-index: 0;
             filter: blur(60px);
-            animation: light-drift 12s infinite alternate ease-in-out;
-        }
-
-        @keyframes light-drift {
-            from { transform: rotate(-35deg) translateX(-50px); opacity: 0.3; }
-            to { transform: rotate(-32deg) translateX(50px); opacity: 0.6; }
         }
 
         .leaf-particle {
@@ -58,18 +56,15 @@
         }
 
         @keyframes drift {
-            0% { transform: translateY(-10vh) translateX(0) rotate(0deg); opacity: 0; }
+            0% { transform: translateY(-10vh) rotate(0deg); opacity: 0; }
             20% { opacity: 0.8; }
-            80% { opacity: 0.8; }
             100% { transform: translateY(110vh) translateX(80px) rotate(360deg); opacity: 0; }
         }
 
         .glass-notepad {
             background: rgba(255, 255, 255, 0.4);
-            backdrop-filter: blur(15px) saturate(160%);
-            -webkit-backdrop-filter: blur(15px) saturate(160%);
+            backdrop-filter: blur(15px);
             border: 1px solid rgba(255, 255, 255, 0.6);
-            box-shadow: 0 25px 50px -12px rgba(45, 90, 39, 0.15);
             border-radius: 3rem;
         }
 
@@ -82,317 +77,207 @@
             background: rgba(255, 255, 255, 0.6);
             backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.8);
-            box-shadow: 0 4px 15px rgba(88, 129, 87, 0.1);
             color: #2d4a2d;
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            font-size: 1.2rem;
+            transition: all 0.4s;
+            font-size: 1.5rem;
             cursor: pointer;
-        }
-
-        .glass-btn:hover {
-            background: white;
-            transform: translateY(-4px);
-            box-shadow: 0 10px 25px rgba(88, 129, 87, 0.2);
-        }
-
-        .player-toggle {
-            position: fixed;
-            bottom: 30px;
-            right: 30px;
-            z-index: 200;
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            background: rgba(88, 129, 87, 0.8);
-            backdrop-filter: blur(10px);
-            border: 2px solid white;
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
         }
 
         .language-gate {
             position: fixed;
             inset: 0;
             z-index: 1000;
-            background: linear-gradient(135deg, #fdfbf0 0%, #e8f0e8 100%);
+            background: #fdfbf0;
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 20px;
         }
 
         .lang-card {
-            background: rgba(255, 255, 255, 0.7);
-            backdrop-filter: blur(20px);
-            width: 100%;
-            max-width: 650px;
-            padding: 50px;
+            background: white;
+            padding: 40px;
             border-radius: 40px;
             text-align: center;
-            border: 1px solid white;
+            max-width: 600px;
+            width: 90%;
         }
 
         .lang-btn {
-            padding: 14px 20px;
-            background: var(--glass-shine);
-            backdrop-filter: blur(5px);
-            border: 1px solid rgba(255, 255, 255, 0.8);
+            padding: 12px;
+            background: white;
+            border: 1px solid rgba(88, 129, 87, 0.2);
             border-radius: 20px;
-            transition: all 0.3s;
-            font-size: 1.6rem;
-            color: var(--forest-vibrant);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
+            font-size: 1.4rem;
             width: 100%;
-        }
-
-        .lang-btn:hover {
-            background: var(--forest-vibrant);
-            color: white;
-            transform: translateY(-2px);
-        }
-
-        .archive-card {
-            background: rgba(255, 255, 255, 0.5);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.8);
-            border-radius: 2.5rem;
-            transition: all 0.4s ease;
+            margin: 5px 0;
         }
 
         .top-branding {
             text-align: center;
-            padding: 40px 0;
+            padding: 30px 0;
             letter-spacing: 0.3em;
-            font-size: 1.5rem;
+            font-size: 1.4rem;
             color: var(--forest-vibrant);
             font-weight: 700;
-            opacity: 0.8;
         }
     </style>
 </head>
 <body>
 
+    <div class="bg-textured"></div>
     <div class="sun-ray"></div>
     <div id="leaf-container"></div>
 
     <div id="languageGate" class="language-gate">
         <div class="lang-card">
-            <i class="fa-solid fa-tree text-emerald-800 text-6xl mb-6"></i>
-            <h2 id="langPrompt" class="text-5xl mb-10 text-emerald-900 leading-tight">What language are you most comfortable with?</h2>
+            <h2 class="text-4xl mb-8 text-emerald-900">What language are you most comfortable with?</h2>
             <div id="langGrid" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <button onclick="selectLanguage('English')" class="lang-btn"><span>English</span> <i class="fa-solid fa-sort text-sm"></i></button>
-                <button onclick="selectLanguage('Hindi')" class="lang-btn"><span>हिन्दी (Hindi)</span> <i class="fa-solid fa-sort text-sm"></i></button>
-                <button onclick="selectLanguage('Spanish')" class="lang-btn"><span>Español</span> <i class="fa-solid fa-sort text-sm"></i></button>
-                <button onclick="selectLanguage('Bengali')" class="lang-btn"><span>বাংলা (Bengali)</span> <i class="fa-solid fa-sort text-sm"></i></button>
-                <button onclick="selectLanguage('French')" class="lang-btn"><span>Français</span> <i class="fa-solid fa-sort text-sm"></i></button>
-                <button onclick="selectLanguage('Arabic')" class="lang-btn"><span>العربية</span> <i class="fa-solid fa-sort text-sm"></i></button>
-                <button onclick="selectLanguage('Russian')" class="lang-btn"><span>Русский</span> <i class="fa-solid fa-sort text-sm"></i></button>
-                <button onclick="selectLanguage('Japanese')" class="lang-btn"><span>日本語</span> <i class="fa-solid fa-sort text-sm"></i></button>
+                <button onclick="pickLanguage('English')" class="lang-btn">English</button>
+                <button onclick="pickLanguage('Hindi')" class="lang-btn">हिन्दी</button>
+                <button onclick="pickLanguage('Spanish')" class="lang-btn">Español</button>
+                <button onclick="pickLanguage('Bengali')" class="lang-btn">বাংলা</button>
+                <button onclick="pickLanguage('French')" class="lang-btn">Français</button>
+                <button onclick="pickLanguage('Japanese')" class="lang-btn">日本語</button>
             </div>
-            <div id="loadingOverlay" class="hidden mt-8">
-                <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600 mx-auto"></div>
-                <p class="text-emerald-700 mt-4 text-xl italic">Setting the space for you...</p>
+            <div id="gateLoader" class="hidden mt-8 text-emerald-700 italic text-2xl animate-pulse">
+                Setting the space for you...
             </div>
         </div>
     </div>
 
-    <audio id="bgMusic" loop preload="auto">
-        <source src="https://assets.mixkit.co/music/preview/mixkit-forest-ambience-with-birds-chirping-1216.mp3" type="audio/mpeg">
-    </audio>
+    <main id="mainApp" class="opacity-0 transition-opacity duration-1000">
+        <header class="top-branding">FrametheChnage</header>
 
-    <div id="musicControl" class="player-toggle" onclick="toggleMusic()">
-        <i id="musicIcon" class="fa-solid fa-leaf"></i>
-    </div>
-
-    <main id="mainApp" class="opacity-0 transition-opacity duration-1000 relative z-10">
-        <header class="top-branding"><span id="siteHeaderTitle">FrametheChnage</span></header>
-
-        <section class="pt-10 pb-20 px-6 text-center">
-            <div id="sadhguruQuote" class="p-8 max-w-2xl mx-auto italic mb-12 text-4xl md:text-5xl text-emerald-950 leading-relaxed">
-                <p id="quoteText">"Leave a note bearing soemthing you wish someone had told you. Or simply just be present till you feel better"</p>
+        <section class="pt-6 pb-12 px-6 text-center">
+            <div id="quoteBox" class="p-6 max-w-2xl mx-auto italic mb-8 text-3xl md:text-5xl text-emerald-950 leading-relaxed">
+                "Leave a note bearing soemthing you wish someone had told you. Or simply just be present till you feel better"
             </div>
-            <h1 id="heroTitle" class="text-7xl md:text-9xl text-emerald-900 mb-6">rOOTed tOgEThER</h1>
-            <p id="heroSubtitle" class="text-3xl text-emerald-800/60 mb-8">here for all.</p>
+            <h1 id="heroTitle" class="text-6xl md:text-8xl text-emerald-900 mb-4">rOOTed tOgEThER</h1>
+            <p id="heroSubtitle" class="text-2xl text-emerald-800/60">here for all.</p>
         </section>
 
         <section class="py-12 px-6 max-w-4xl mx-auto">
-            <div class="mb-8 flex justify-between items-end border-b border-emerald-900/10 pb-6">
-                <p id="currentTimestamp" class="text-emerald-700/40 text-lg font-bold">Loading Moment...</p>
-                <button id="btnPreserve" onclick="saveEntry()" class="p-4 glass-btn flex items-center gap-3 rounded-2xl">
+            <div class="mb-6 flex justify-between items-end">
+                <p id="dateStamp" class="text-emerald-700/40 text-lg font-bold">LOADING...</p>
+                <button onclick="saveNote()" class="p-4 glass-btn rounded-2xl flex items-center gap-2">
                     <i class="fa-solid fa-seedling text-emerald-600"></i> Preserve
                 </button>
             </div>
 
             <div class="glass-notepad">
-                <div class="note-paper p-10 md:p-16 min-h-[400px]">
-                    <textarea id="mainNote" class="w-full bg-transparent border-none focus:ring-0 text-4xl text-emerald-950 placeholder:text-emerald-900/10 resize-none h-full outline-none" placeholder="Let your thoughts settle on the page..." oninput="updateCount()"></textarea>
+                <div class="note-paper p-8 md:p-12 min-h-[350px]">
+                    <textarea id="noteInput" class="w-full bg-transparent border-none focus:ring-0 text-3xl text-emerald-950 placeholder:text-emerald-900/10 resize-none h-64 outline-none" placeholder="Let your thoughts settle on the page..."></textarea>
                 </div>
             </div>
-            <div class="mt-6 text-center text-xl text-emerald-900/30 font-bold">
-                <span id="wordCount">0 words captured in peace</span>
-            </div>
         </section>
 
-        <section class="py-24 px-6 max-w-6xl mx-auto">
-            <div id="entriesList" class="grid md:grid-cols-2 gap-12"></div>
-        </section>
-
-        <footer class="bg-emerald-950 text-emerald-100/30 py-24 text-center">
-            <div class="text-6xl text-white mb-6 opacity-80">rOOTed tOgEThER.</div>
-            <p id="footerLabel" class="text-xl tracking-widest">here for all</p>
-        </footer>
+        <section id="notesFeed" class="py-20 px-6 max-w-6xl mx-auto grid md:grid-cols-2 gap-10"></section>
     </main>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, onSnapshot, serverTimestamp, query } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         const firebaseConfig = JSON.parse(__firebase_config);
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'rooted-together-live';
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'rooted-shared-live';
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
+        const apiKey = "";
 
-        const apiKey = ""; // API Key provided by env
         let user = null;
-        let currentLanguage = "English";
 
-        // Firebase Auth Setup
-        const initAuth = async () => {
+        window.pickLanguage = async (lang) => {
+            document.getElementById('langGrid').classList.add('hidden');
+            document.getElementById('gateLoader').classList.remove('hidden');
+
+            if (lang !== "English") {
+                try {
+                    const ui = {
+                        quote: "Leave a note bearing soemthing you wish someone had told you. Or simply just be present till you feel better",
+                        subtitle: "here for all.",
+                        placeholder: "Let your thoughts settle on the page...",
+                        preserve: "Preserve"
+                    };
+                    
+                    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            contents: [{ parts: [{ text: `Translate these values to ${lang}. Keep "rOOTed tOgEThER" and "FrametheChnage" as is. JSON: ${JSON.stringify(ui)}` }] }],
+                            generationConfig: { responseMimeType: "application/json" }
+                        })
+                    });
+                    const data = await response.json();
+                    const trans = JSON.parse(data.candidates[0].content.parts[0].text);
+                    
+                    document.getElementById('quoteBox').innerText = `"${trans.quote}"`;
+                    document.getElementById('heroSubtitle').innerText = trans.subtitle;
+                    document.getElementById('noteInput').placeholder = trans.placeholder;
+                } catch (e) { console.error(e); }
+            }
+
+            document.getElementById('languageGate').classList.add('hidden');
+            document.getElementById('mainApp').classList.remove('opacity-0');
+            startEnv();
+        };
+
+        window.saveNote = async () => {
+            const text = document.getElementById('noteInput').value.trim();
+            if (!text || !user) return;
+            try {
+                await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'notes'), {
+                    text,
+                    uid: user.uid,
+                    rot: (Math.random() * 4 - 2).toFixed(2),
+                    ts: serverTimestamp()
+                });
+                document.getElementById('noteInput').value = "";
+            } catch (e) { console.error(e); }
+        };
+
+        function startEnv() {
+            document.getElementById('dateStamp').innerText = new Date().toLocaleDateString(undefined, { month: 'long', day: 'numeric' }).toUpperCase();
+            setInterval(() => {
+                const leaf = document.createElement('i');
+                leaf.className = 'fa-solid fa-leaf leaf-particle';
+                leaf.style.left = Math.random() * 100 + 'vw';
+                leaf.style.animationDuration = (Math.random() * 8 + 8) + 's';
+                document.getElementById('leaf-container').appendChild(leaf);
+                setTimeout(() => leaf.remove(), 16000);
+            }, 4000);
+        }
+
+        onAuthStateChanged(auth, (u) => {
+            user = u;
+            if (user) {
+                // The shared screen logic: Listening for any changes in the shared 'notes' collection
+                const notesCollection = collection(db, 'artifacts', appId, 'public', 'data', 'notes');
+                onSnapshot(notesCollection, (snap) => {
+                    const list = [];
+                    snap.forEach(d => list.push(d.data()));
+                    // Sort locally to keep the newest notes at the top across all screens
+                    list.sort((a,b) => (b.ts?.seconds || 0) - (a.ts?.seconds || 0));
+                    document.getElementById('notesFeed').innerHTML = list.map(n => `
+                        <div class="glass-notepad p-10 shadow-sm" style="transform: rotate(${n.rot}deg)">
+                            <div class="text-3xl text-emerald-950 whitespace-pre-wrap">${n.text}</div>
+                        </div>
+                    `).join('');
+                }, (error) => {
+                    console.error("Firestore sync error:", error);
+                });
+            }
+        });
+
+        const init = async () => {
             if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
                 await signInWithCustomToken(auth, __initial_auth_token);
             } else {
                 await signInAnonymously(auth);
             }
         };
-
-        onAuthStateChanged(auth, (u) => {
-            user = u;
-            if (user) listenForNotes();
-        });
-
-        initAuth();
-
-        function listenForNotes() {
-            if (!user) return;
-            const notesCol = collection(db, 'artifacts', appId, 'public', 'data', 'notes');
-            onSnapshot(notesCol, (snapshot) => {
-                const notes = [];
-                snapshot.forEach(doc => notes.push({ id: doc.id, ...doc.data() }));
-                notes.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
-                renderNotes(notes);
-            }, err => console.error(err));
-        }
-
-        window.saveEntry = async () => {
-            if (!user) return;
-            const text = document.getElementById('mainNote').value.trim();
-            if (!text) return;
-            try {
-                await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'notes'), {
-                    content: text,
-                    author: user.uid,
-                    rotation: (Math.random() * 4 - 2).toFixed(2),
-                    createdAt: serverTimestamp()
-                });
-                document.getElementById('mainNote').value = '';
-                updateCount();
-            } catch (e) { console.error(e); }
-        };
-
-        function renderNotes(notes) {
-            const list = document.getElementById('entriesList');
-            list.innerHTML = notes.map(n => `
-                <div class="archive-card p-10" style="transform: rotate(${n.rotation || 0}deg)">
-                    <div class="text-3xl text-emerald-950 whitespace-pre-wrap">${n.content}</div>
-                </div>
-            `).join('');
-        }
-
-        window.selectLanguage = async (lang) => {
-            currentLanguage = lang;
-            document.getElementById('langGrid').classList.add('hidden');
-            document.getElementById('loadingOverlay').classList.remove('hidden');
-            
-            if (lang !== "English") {
-                await translateUI(lang);
-            }
-            
-            document.getElementById('languageGate').classList.add('hidden');
-            document.getElementById('mainApp').classList.remove('opacity-0');
-            startUIEffects();
-        };
-
-        async function translateUI(lang) {
-            const ui = {
-                siteHeaderTitle: "FrametheChnage",
-                heroTitle: "rOOTed tOgEThER",
-                heroSubtitle: "here for all.",
-                btnPreserve: "Preserve",
-                mainNotePlaceholder: "Let your thoughts settle on the page...",
-                footerLabel: "here for all",
-                quote: "Leave a note bearing soemthing you wish someone had told you. Or simply just be present till you feel better"
-            };
-
-            const prompt = `Translate this JSON to ${lang}. Keep branding "rOOTed tOgEThER" and "FrametheChnage" exactly as is: ${JSON.stringify(ui)}`;
-            
-            try {
-                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }], generationConfig: { responseMimeType: "application/json" }})
-                });
-                const data = await response.json();
-                const trans = JSON.parse(data.candidates[0].content.parts[0].text);
-                
-                document.getElementById('siteHeaderTitle').innerText = trans.siteHeaderTitle;
-                document.getElementById('heroTitle').innerText = trans.heroTitle;
-                document.getElementById('heroSubtitle').innerText = trans.heroSubtitle;
-                document.getElementById('btnPreserve').lastChild.textContent = " " + trans.btnPreserve;
-                document.getElementById('mainNote').placeholder = trans.mainNotePlaceholder;
-                document.getElementById('footerLabel').innerText = trans.footerLabel;
-                document.getElementById('quoteText').innerText = `"${trans.quote}"`;
-            } catch (e) { console.error("Translation failed", e); }
-        }
-
-        window.toggleMusic = () => {
-            const audio = document.getElementById('bgMusic');
-            const icon = document.getElementById('musicIcon');
-            if (audio.paused) {
-                audio.play();
-                icon.className = 'fa-solid fa-volume-high';
-            } else {
-                audio.pause();
-                icon.className = 'fa-solid fa-leaf';
-            }
-        };
-
-        window.updateCount = () => {
-            const text = document.getElementById('mainNote').value;
-            const words = text.trim() ? text.trim().split(/\s+/).length : 0;
-            document.getElementById('wordCount').innerText = `${words} words captured in peace`;
-        };
-
-        function startUIEffects() {
-            setInterval(() => {
-                const container = document.getElementById('leaf-container');
-                const leaf = document.createElement('i');
-                leaf.className = 'fa-solid fa-leaf leaf-particle';
-                leaf.style.left = Math.random() * 100 + 'vw';
-                leaf.style.fontSize = (Math.random() * 15 + 15) + 'px';
-                leaf.style.animationDuration = (Math.random() * 10 + 8) + 's';
-                container.appendChild(leaf);
-                setTimeout(() => leaf.remove(), 20000);
-            }, 3000);
-            document.getElementById('currentTimestamp').innerText = `THE PRESENT MOMENT: ${new Date().toLocaleDateString(undefined, { month: 'long', day: 'numeric' }).toUpperCase()}`;
-        }
+        init();
     </script>
 </body>
 </html>
