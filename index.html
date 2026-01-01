@@ -113,6 +113,7 @@
             width: 100%;
             margin: 5px 0;
             cursor: pointer;
+            display: block;
         }
 
         .top-branding {
@@ -124,7 +125,6 @@
             font-weight: 700;
         }
 
-        /* Ensure mainApp is physically present but hidden initially */
         #mainApp {
             display: none;
             opacity: 0;
@@ -142,12 +142,12 @@
         <div class="lang-card">
             <h2 class="text-4xl mb-8 text-emerald-900">What language are you most comfortable with?</h2>
             <div id="langGrid" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <button class="lang-btn" onclick="pickLanguage('English')">English</button>
-                <button class="lang-btn" onclick="pickLanguage('Hindi')">हिन्दी</button>
-                <button class="lang-btn" onclick="pickLanguage('Spanish')">Español</button>
-                <button class="lang-btn" onclick="pickLanguage('Bengali')">বাংলা</button>
-                <button class="lang-btn" onclick="pickLanguage('French')">Français</button>
-                <button class="lang-btn" onclick="pickLanguage('Japanese')">日本語</button>
+                <button class="lang-btn" onclick="handleLangSelection('English')">English</button>
+                <button class="lang-btn" onclick="handleLangSelection('Hindi')">हिन्दी</button>
+                <button class="lang-btn" onclick="handleLangSelection('Spanish')">Español</button>
+                <button class="lang-btn" onclick="handleLangSelection('Bengali')">বাংলা</button>
+                <button class="lang-btn" onclick="handleLangSelection('French')">Français</button>
+                <button class="lang-btn" onclick="handleLangSelection('Japanese')">日本語</button>
             </div>
             <div id="gateLoader" class="hidden mt-8 text-emerald-700 italic text-2xl animate-pulse">
                 Setting the space for you...
@@ -198,35 +198,36 @@
 
         let user = null;
 
-        // Attach functions to window so the HTML onclick attributes can find them
-        window.pickLanguage = (lang) => {
+        // Using a unique name to avoid any potential reserved word collisions
+        window.handleLangSelection = (lang) => {
             const gate = document.getElementById('languageGate');
             const main = document.getElementById('mainApp');
             const grid = document.getElementById('langGrid');
             const loader = document.getElementById('gateLoader');
             
-            // UI Feedback
+            // 1. Immediately show loader
             grid.classList.add('hidden');
             loader.classList.remove('hidden');
 
-            // Start translation in background
+            // 2. Trigger non-blocking translation
             if (lang !== "English") {
-                translateUI(lang);
+                translateUIContent(lang);
             }
 
-            // Forced transition
+            // 3. Immediately trigger transition to main app
             gate.style.opacity = '0';
             setTimeout(() => {
                 gate.style.display = 'none';
                 main.style.display = 'block';
-                setTimeout(() => {
-                    main.style.opacity = '1';
-                }, 50);
-                startEnv();
-            }, 500);
+                // Trigger reflow
+                main.offsetHeight; 
+                main.style.opacity = '1';
+                startEnvironment();
+                setupFirestoreSync();
+            }, 400);
         };
 
-        async function translateUI(lang) {
+        async function translateUIContent(lang) {
             try {
                 const ui = {
                     quote: "Leave a note bearing soemthing you wish someone had told you. Or simply just be present till you feel better",
@@ -247,18 +248,24 @@
                 if (response.ok) {
                     const data = await response.json();
                     const trans = JSON.parse(data.candidates[0].content.parts[0].text);
-                    document.getElementById('quoteBox').innerText = `"${trans.quote}"`;
-                    document.getElementById('heroSubtitle').innerText = trans.subtitle;
-                    document.getElementById('noteInput').placeholder = trans.placeholder;
-                    document.getElementById('saveBtnText').innerText = trans.preserve;
+                    const quoteBox = document.getElementById('quoteBox');
+                    const heroSubtitle = document.getElementById('heroSubtitle');
+                    const noteInput = document.getElementById('noteInput');
+                    const saveBtnText = document.getElementById('saveBtnText');
+                    
+                    if(quoteBox) quoteBox.innerText = `"${trans.quote}"`;
+                    if(heroSubtitle) heroSubtitle.innerText = trans.subtitle;
+                    if(noteInput) noteInput.placeholder = trans.placeholder;
+                    if(saveBtnText) saveBtnText.innerText = trans.preserve;
                 }
             } catch (e) { 
-                console.warn("Translation failed, continuing in English", e); 
+                console.warn("Translation silently skipped", e); 
             }
         }
 
         window.saveNote = async () => {
-            const text = document.getElementById('noteInput').value.trim();
+            const input = document.getElementById('noteInput');
+            const text = input.value.trim();
             if (!text || !user) return;
             
             try {
@@ -268,40 +275,55 @@
                     rot: (Math.random() * 4 - 2).toFixed(2),
                     ts: serverTimestamp()
                 });
-                document.getElementById('noteInput').value = "";
+                input.value = "";
             } catch (e) { 
                 console.error("Save failed", e); 
             }
         };
 
-        function startEnv() {
-            document.getElementById('dateStamp').innerText = new Date().toLocaleDateString(undefined, { month: 'long', day: 'numeric' }).toUpperCase();
+        function startEnvironment() {
+            const dateEl = document.getElementById('dateStamp');
+            if(dateEl) {
+                dateEl.innerText = new Date().toLocaleDateString(undefined, { month: 'long', day: 'numeric' }).toUpperCase();
+            }
+            
             if (!window.leafInterval) {
                 window.leafInterval = setInterval(() => {
+                    const container = document.getElementById('leaf-container');
+                    if(!container) return;
                     const leaf = document.createElement('i');
                     leaf.className = 'fa-solid fa-leaf leaf-particle';
                     leaf.style.left = Math.random() * 100 + 'vw';
                     leaf.style.animationDuration = (Math.random() * 8 + 8) + 's';
-                    document.getElementById('leaf-container').appendChild(leaf);
+                    container.appendChild(leaf);
                     setTimeout(() => leaf.remove(), 16000);
                 }, 4000);
             }
         }
 
-        onAuthStateChanged(auth, (u) => {
-            user = u;
-            if (user) {
-                const notesCollection = collection(db, 'artifacts', appId, 'public', 'data', 'notes');
-                onSnapshot(notesCollection, (snap) => {
-                    const list = [];
-                    snap.forEach(d => list.push(d.data()));
-                    list.sort((a,b) => (b.ts?.seconds || 0) - (a.ts?.seconds || 0));
-                    document.getElementById('notesFeed').innerHTML = list.map(n => `
+        function setupFirestoreSync() {
+            if (!user) return;
+            const notesCollection = collection(db, 'artifacts', appId, 'public', 'data', 'notes');
+            onSnapshot(notesCollection, (snap) => {
+                const list = [];
+                snap.forEach(d => list.push(d.data()));
+                list.sort((a,b) => (b.ts?.seconds || 0) - (a.ts?.seconds || 0));
+                const feed = document.getElementById('notesFeed');
+                if(feed) {
+                    feed.innerHTML = list.map(n => `
                         <div class="glass-notepad p-10 shadow-sm" style="transform: rotate(${n.rot}deg)">
                             <div class="text-3xl text-emerald-950 whitespace-pre-wrap">${n.text}</div>
                         </div>
                     `).join('');
-                }, (err) => console.error(err));
+                }
+            }, (err) => console.error(err));
+        }
+
+        onAuthStateChanged(auth, (u) => {
+            user = u;
+            // Re-sync if they are already in the main app
+            if(user && document.getElementById('mainApp').style.display === 'block') {
+                setupFirestoreSync();
             }
         });
 
