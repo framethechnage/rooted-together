@@ -288,7 +288,8 @@
                 text,
                 date: new Date().toISOString(),
                 id: Date.now(),
-                rotation: (Math.random() * 4 - 2).toFixed(2)
+                rotation: (Math.random() * 4 - 2).toFixed(2),
+                isUserGenerated: true
             });
 
             localStorage.setItem('sanctuary_notes', JSON.stringify(notes));
@@ -297,17 +298,32 @@
         };
 
         function renderPersonalNotes() {
-            const notes = JSON.parse(localStorage.getItem('sanctuary_notes') || '[]');
+            // User's own notes from storage
+            const savedNotes = JSON.parse(localStorage.getItem('sanctuary_notes') || '[]');
+            
+            // The "Global Wisdom" notes that always show regardless of storage
+            const globalWisdom = [
+                { text: "do what you're supposed to do, so you can do what you want to.", date: "Found in the wind", id: "g1", rotation: -1.5 },
+                { text: "you're you and noone else is. don't lose that advantage.", date: "Written in the bark", id: "g2", rotation: 1.2 },
+                { text: "girl chill out you got this trust", date: "Whispered by leaves", id: "g3", rotation: -0.8 },
+                { text: "you're lost? so are we! blind leading the blind core", date: "Carved in stone", id: "g4", rotation: 2.1 },
+                { text: "there are always options and if not then create some bro", date: "Seen in the stars", id: "g5", rotation: -2.3 }
+            ];
+
+            // Merge: Global notes first, then user notes
+            const allNotes = [...globalWisdom, ...savedNotes];
             const feed = document.getElementById('personalFeed');
             
-            feed.innerHTML = notes.map(n => `
+            feed.innerHTML = allNotes.map(n => `
                 <div class="glass-notepad p-10 fade-in shadow-sm relative group" style="transform: rotate(${n.rotation}deg)">
-                    <button onclick="deleteNote(${n.id})" class="absolute top-4 right-4 opacity-0 group-hover:opacity-40 transition-opacity hover:!opacity-100 text-emerald-900">
-                        <i class="fa-solid fa-trash-can"></i>
-                    </button>
+                    ${n.isUserGenerated ? `
+                        <button onclick="deleteNote(${n.id})" class="absolute top-4 right-4 opacity-0 group-hover:opacity-40 transition-opacity hover:!opacity-100 text-emerald-900">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </button>
+                    ` : ''}
                     <div class="text-3xl text-emerald-950 whitespace-pre-wrap leading-relaxed">${n.text}</div>
                     <div class="mt-6 text-sm text-emerald-800/30 font-bold tracking-widest">
-                        ${new Date(n.date).toLocaleDateString()}
+                        ${n.isUserGenerated ? new Date(n.date).toLocaleDateString() : n.date}
                     </div>
                 </div>
             `).join('');
